@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:o="http://omnifaces.org/ui"
+>
+<h:head>
+    <h:outputStylesheet name="css/styles.css" />
+    <title>Lab2</title>
+</h:head>
+<h:body>
+
+
+    <!-- 3333333333333333333333333333333333333333333333333 -->
+    <dt><b>Glass-box extensibility</b></dt>
+    <dd><p>#{extensibilityController.containerAsString()}</p></dd>
+
+
+    <!-- 2222222222222222222222222222222222222222222222222 -->
+    <dt><b>Asynchronous calls</b></dt>
+    <dd><p>#{compA.callAsyncMethod()}</p></dd>
+
+<!-- 111111111111111111111111111111111111111111111111111111 -->
+    <dt><b>Optimistinis rakinimas</b></dt>
+    <h1>Edit Car with Optimistic Locking</h1>
+
+    <h:form id="form">
+        <p:fieldset id="list" style="width: 50%">
+            <f:facet name="legend">
+                All cars
+                <p:commandButton value="Refresh" icon="ui-icon-arrowrefresh-1-e"
+                                 actionListener="#{editCarController.reloadAll}"
+                                 update=":form:list"/>
+            </f:facet>
+
+            <p:dataTable value="#{editCarController.allCars}" var="car" tableStyle="table-layout: auto">
+                <p:column headerText="Car">
+                    #{car.brand} #{car.model}, <br/><b> nr.</b>: #{car.number}
+                </p:column>
+                <p:column>
+                    <p:commandButton value="Edit" icon="ui-icon-pencil"
+                                     actionListener="#{editCarController.prepareForEditing(car)}"
+                                     update=":form:carDetail"
+                                     oncomplete="PF('carDialog').show()" />
+                </p:column>
+            </p:dataTable>
+        </p:fieldset>
+
+        <p:dialog header="Edit Car" widgetVar="carDialog" modal="true" closable="true" resizable="false" closeOnEscape="true">
+            <p:outputPanel id="carDetail">
+                <h:outputText value="No car was selected... Weird..." rendered="#{empty editCarController.selectedCar}" />
+                <p:panelGrid  columns="3" rendered="#{not empty editCarController.selectedCar}"
+                              columnClasses="label,value" styleClass="ui-noborder">
+                    <p:outputLabel for="Brand" value="Brand:"/>
+                    <p:inputText id="Brand" value="#{editCarController.selectedCar.brand}"/>
+                    <p:message for="Brand"/>
+
+                    <p:outputLabel for="Model" value="Model:"/>
+                    <p:inputText id="Model" value="#{editCarController.selectedCar.model}"/>
+                    <p:message for="Model"/>
+
+                    <p:outputLabel for="Number" value="Number:"/>
+                    <p:inputText id="Number" value="#{editCarController.selectedCar.number}"/>
+                    <p:message for="Number"/>
+
+                    <h:outputText value="Opt. version:" />
+                    <h:outputText value="#{editCarController.selectedCar.optLockVersion}" style="font-weight: bold"/>
+                </p:panelGrid>
+
+                <p:commandButton value="Update" actionListener="#{editCarController.updateSelectedCar}"
+                                 rendered="#{empty editCarController.conflictingCar}"
+                                 icon="ui-icon-check" style="margin-top: 1em"
+                                 update=":form:carDetail :form:list"
+                                 oncomplete="if (args &amp;&amp; !args.validationFailed) PF('carDialog').hide()" />
+
+                <p:panelGrid  columns="2" rendered="#{not empty editCarController.conflictingCar}"
+                              columnClasses="label,value" styleClass="ui-noborder" style="margin-top: 1em">
+                    <f:facet name="header">Conflicting car</f:facet>
+
+                    <h:outputText value="Brand:"/>
+                    <h:outputText value="#{editCarController.conflictingCar.brand}"/>
+
+                    <h:outputText value="Model:"/>
+                    <h:outputText value="#{editCarController.conflictingCar.model}"/>
+
+                    <h:outputText value="Number:"/>
+                    <h:outputText value="#{editCarController.conflictingCar.number}"/>
+
+                    <h:outputText value="Opt. version:" />
+                    <h:outputText value="#{editCarController.conflictingCar.optLockVersion}" style="font-weight: bold"/>
+                </p:panelGrid>
+
+                <p:commandButton value="Overwrite" actionListener="#{editCarController.overwriteCar}"
+                                 rendered="#{not empty editCarController.conflictingCar}"
+                                 icon="ui-icon-notice" style="margin-top: 1em"
+                                 update=":form:carDetail :form:list"
+                                 oncomplete="if (args &amp;&amp; !args.validationFailed) PF('carDialog').hide()" />
+            </p:outputPanel>
+        </p:dialog>
+
+        <p:messages globalOnly="true"/>
+    </h:form>
+
+</h:body>
+</html>
